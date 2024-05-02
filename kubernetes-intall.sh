@@ -30,7 +30,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Install a pod network add-on (Calico in this example)
 #kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
+#kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
 
 # If you want to allow the master node to schedule pods, remove the taint
 #kubectl taint nodes --all node-role.kubernetes.io/master-
