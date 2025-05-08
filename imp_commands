@@ -1,0 +1,35 @@
+Important commands
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Kubernetes
+
+
+kubectl get statefulset kafka-v2 -n egov -o yaml > kafka-v2-statefulset-28-April.yaml
+
+_________________________________________________________________________________
+label worker nodes
+
+kubectl label node p-10-0-31-113 node-role.kubernetes.io/w1=""
+
+
+
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Linux
+
+
+
+
+
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Jenkins
+
+sudo chmod 777 /var/run/docker.sock 
