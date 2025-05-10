@@ -6,6 +6,52 @@ Kubernetes
 
 kubectl get statefulset kafka-v2 -n egov -o yaml > kafka-v2-statefulset-28-April.yaml
 
+__________________________________________________________________________________
+install helm in ubuntu
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+helm version
+
+__________________________________________________________________________________
+install CSI driver for ec2 instance
+
+helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+helm repo update
+
+IAM Permissions
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateVolume",
+        "ec2:AttachVolume",
+        "ec2:DetachVolume",
+        "ec2:DeleteVolume",
+        "ec2:DescribeVolume*",
+        "ec2:DescribeInstances"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+
+________________________________________________________________________________
+
+helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
+  --namespace kube-system \
+  --set controller.serviceAccount.create=true \
+  --set controller.serviceAccount.name=ebs-csi-controller-sa \
+  --set storageClasses[0].name=ebs-sc \
+  --set storageClasses[0].volumeBindingMode=WaitForFirstConsumer \
+  --set storageClasses[0].reclaimPolicy=Delete \
+  --set storageClasses[0].allowVolumeExpansion=true \
+  --set storageClasses[0].parameters.type=gp2
+
+
 _________________________________________________________________________________
 label worker nodes
 
