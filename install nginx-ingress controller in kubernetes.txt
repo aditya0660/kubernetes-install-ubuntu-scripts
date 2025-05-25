@@ -1,0 +1,89 @@
+How to install nginx controller and host website using path based routing
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Step -1
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/aws/deploy.yaml
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Step-2
+
+kubectl edit svc ingress-nginx-controller -n ingress-nginx
+
+change following:-
+
+  type: LoadBalancer
+  to
+  type: NodePort
+  
+  save and exit
+  
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+  
+Step -3
+
+nano ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nimblefish-ingress
+  namespace: app
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: nimblefish.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: samplewebsite-service
+            port:
+              number: 80
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Step -4 install nginx websever
+
+apt install nginx -y
+
+cd /etc/nginx/conf.d/
+
+nano nimblefish.conf
+
+
+---------------------------------
+server {
+    listen 80;
+    server_name nimblefish.in;
+
+    location / {
+        proxy_pass http://10.97.24.208;
+        proxy_set_header Host $host;
+    }
+
+    location /app {
+        proxy_pass http://10.97.24.208;
+        proxy_set_header Host $host;
+    }
+}
+
+--------------------------------------
+
+nginx -t
+
+systemctl restart nginx
+			  
+			  
