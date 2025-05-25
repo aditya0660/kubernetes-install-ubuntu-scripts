@@ -65,18 +65,42 @@ nano nimblefish.conf
 
 
 ---------------------------------
+nano nimblefish.conf
+
+# Define the backend servers
+upstream backend {
+    server 10.97.24.208;
+    # You can add more servers for load balancing:
+    # server 10.97.24.209;
+    # server 10.97.24.210;
+}
+
 server {
     listen 80;
     server_name nimblefish.in;
 
+    # Serve static files (optional, uncomment and configure as needed)
+    # location /images/ {
+    #     root /var/www/nimblefish;
+    #     try_files $uri $uri/ =404;
+    # }
+
+    # Proxy all requests to the upstream backend
     location / {
-        proxy_pass http://10.97.24.208;
+        proxy_pass http://backend/;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /app {
-        proxy_pass http://10.97.24.208;
+    # Optional: Specific handling for /app
+    location /app/ {
+        proxy_pass http://backend/app/;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 
