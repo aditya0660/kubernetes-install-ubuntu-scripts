@@ -1,0 +1,165 @@
+Grafana prometheus and loki setup
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+kubectl create ns dev
+
++++++++++++++++++++++++++++++++++++++++++++++++++
+cat local-pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: loki-pv
+spec:
+  storageClassName: local
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /mnt/disks/loki
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w1
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-pvc
+  namespace: dev
+spec:
+  storageClassName: local
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv
+spec:
+  storageClassName: local
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /mnt/disks/prometheus
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w1
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: dev
+spec:
+  storageClassName: local
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: alertmanager-pv
+spec:
+  storageClassName: local
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /mnt/disks/alertmanager
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k8s-w1
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  namespace: dev
+spec:
+  storageClassName: local
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+	  
+
+
+kubectl apply -f local-pv.yaml
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+cat loki-stack-values.yaml
+
+
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: true
+      existingClaim: prometheus-pvc
+
+  alertmanager:
+    persistentVolume:
+      enabled: true
+      existingClaim: alertmanager-pvc
+
+loki:
+  enabled: true
+  persistence:
+    enabled: true
+    existingClaim: loki-pvc
+
+promtail:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+  persistence:
+    enabled: false  # optional: can use existingClaim if persistent Grafana is needed  
+	
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+helm upgrade --install loki-stack grafana/loki-stack \
+  -n dev \
+  --create-namespace \
+  -f loki-stack-values.yaml
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+kubectl get pods -n dev -o wide
+
+Kubectl get pv,pvc -n dev	
