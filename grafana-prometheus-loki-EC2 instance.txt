@@ -170,3 +170,4 @@ kubectl patch pv alertmanager-pv -p '{
   }
 }'
 
+kubectl get pvc storage-loki-stack-alertmanager-0 -n dev
