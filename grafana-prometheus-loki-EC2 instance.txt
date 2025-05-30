@@ -155,3 +155,18 @@ helm upgrade --install loki-stack grafana/loki-stack \
   -n dev \
   --create-namespace \
   -f loki-stack-values.yaml	
+
++++++++++++++++++++++++++++++++++++++++++++
+
+Step-6
+patch for alertmanger
+
+kubectl patch pv alertmanager-pv -p '{
+  "spec": {
+    "claimRef": {
+      "namespace": "dev",
+      "name": "storage-loki-stack-alertmanager-0"
+    }
+  }
+}'
+
