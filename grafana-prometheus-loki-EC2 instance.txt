@@ -171,3 +171,44 @@ kubectl patch pv alertmanager-pv -p '{
 }'
 
 kubectl get pvc storage-loki-stack-alertmanager-0 -n dev
+
+++++++++++++++++++++++++++++++++++++++++++
+
+cat loki-stack-values-new.yaml
+
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: true
+      existingClaim: prometheus-pvc
+    # Set retention period for Prometheus
+   # extraArgs:
+   #   storage.tsdb.retention.time: 90d
+
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          enabled: false
+        existingClaim: alertmanager-pvc
+
+loki:
+  enabled: true
+  persistence:
+    enabled: true
+    existingClaim: loki-pvc
+  config:
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 2160h  # 90 days
+
+promtail:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+  persistence:
+    enabled: false
