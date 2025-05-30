@@ -1,0 +1,157 @@
+how to install Loki prometheus and grafana
+
+Step -1 
+
+kubectl create ns dev
+
+++++++++++++++++++++++++++++++++++++++++++++++
+
+Step-2
+
+helm repo add grafana https://grafana.github.io/helm-charts 
+
+helm repo update
+
+++++++++++++++++++++++++++++++++++++++++++++++
+
+Step-3
+
+nano pv-pvc.yaml
+
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: loki-pv
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ebs-sc
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: vol-0ddd7f6fc18324498
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-pvc
+  namespace: dev
+spec:
+  storageClassName: ebs-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ebs-sc
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: vol-071265a770b66821b
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: dev
+spec:
+  storageClassName: ebs-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: alertmanager-pv
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ebs-sc
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: vol-0e925ffb0d9530180
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  namespace: dev
+spec:
+  storageClassName: ebs-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Step-4
+
+nano loki-stack-values.yaml
+
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: true
+      existingClaim: prometheus-pvc
+
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          enabled: false
+        existingClaim: alertmanager-pvc
+
+loki:
+  enabled: true
+  persistence:
+    enabled: true
+    existingClaim: loki-pvc
+
+promtail:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+  persistence:
+    enabled: false	  
+	
++++++++++++++++++++++++++++++++++++++++++++
+
+Step-5 installations
+
+helm upgrade --install loki-stack grafana/loki-stack \
+  -n dev \
+  --create-namespace \
+  -f loki-stack-values.yaml	
