@@ -151,10 +151,8 @@ grafana:
 
 Step-5 installations
 
-helm upgrade --install loki-stack grafana/loki-stack \
-  -n dev \
-  --create-namespace \
-  -f loki-stack-values.yaml	
+helm upgrade --install loki-stack grafana/loki-stack   -n dev   --create-namespace   --set loki.config.table_manager.retention_deletes_enabled=true --set loki.config.table_manager.retention_period=720h   --set prometheus.prometheusSpec.retention=30d   -f loki-stack-values.yaml
+	
 
 +++++++++++++++++++++++++++++++++++++++++++
 
@@ -174,41 +172,8 @@ kubectl get pvc storage-loki-stack-alertmanager-0 -n dev
 
 ++++++++++++++++++++++++++++++++++++++++++
 
-cat loki-stack-values-new.yaml
+helm upgrade --install loki-stack grafana/loki-stack   -n dev   --create-namespace   --set loki.config.table_manager.retention_deletes_enabled=true --set loki.config.table_manager.retention_period=720h   --set prometheus.prometheusSpec.retention=30d   -f loki-stack-values.yaml
 
-prometheus:
-  enabled: true
-  server:
-    persistentVolume:
-      enabled: true
-      existingClaim: prometheus-pvc
-    # Set retention period for Prometheus
-   # extraArgs:
-   #   storage.tsdb.retention.time: 90d
+kubectl -n dev edit deployment loki-stack-prometheus-server
 
-  alertmanager:
-    enabled: true
-    alertmanagerSpec:
-      storage:
-        volumeClaimTemplate:
-          enabled: false
-        existingClaim: alertmanager-pvc
-
-loki:
-  enabled: true
-  persistence:
-    enabled: true
-    existingClaim: loki-pvc
-  config:
-    table_manager:
-      retention_deletes_enabled: true
-      retention_period: 2160h  # 90 days
-
-promtail:
-  enabled: true
-
-grafana:
-  enabled: true
-  adminPassword: "admin"
-  persistence:
-    enabled: false
+change from 15d to 30d
