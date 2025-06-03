@@ -1,0 +1,81 @@
+cat loki-stack-values.yaml
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: true
+      existingClaim: prometheus-pvc
+
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          enabled: false
+        existingClaim: alertmanager-pvc
+
+loki:
+  enabled: true
+  persistence:
+    enabled: true
+    existingClaim: loki-pvc
+
+promtail:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+  persistence:
+    enabled: false
+
+  grafana.ini:
+    server:
+      root_url: http://3.239.184.62/mon/
+      serve_from_sub_path: true
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+nano default.conf
+
+
+upstream samplewebsite-service {
+    server samplewebsite-service:80;
+}
+
+upstream loki-stack-grafana {
+    server loki-stack-grafana:80;
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    # Route to Grafana via /mon/
+    location /mon/ {
+        proxy_pass http://loki-stack-grafana/mon/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Route all other traffic to samplewebsite-service
+    location / {
+        proxy_pass http://samplewebsite-service/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
