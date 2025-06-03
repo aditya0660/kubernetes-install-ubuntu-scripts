@@ -79,3 +79,28 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+nano ingress-app.yaml
+
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: dev
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: preprod-nginx-svc
+            port:
+              number: 80
